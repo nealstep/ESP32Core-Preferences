@@ -10,6 +10,9 @@ bool update = true;
 static constexpr uint32_t startup_delay = 3000;
 static constexpr uint32_t medium_delay = 500;
 
+// namespace for preferences
+static constexpr const char* const namespace_name = NAMESPACE;
+
 // values to save
 static constexpr uint32_t c_serial_speed = SERIAL_SPEED;
 static constexpr const char* const c_tz_full = TZ_FULL;
@@ -186,7 +189,7 @@ void setup() {
     Serial.println();
     Serial.println("Preferences Starting");
 
-    preferences.begin("esp32Core", false);
+    preferences.begin(namespace_name, false);
 
     handle_u32("serial_speed", serial_speed, c_serial_speed, b_serial_speed);
     handle_chars("tz_full", tz_full, sizeof(tz_full), c_tz_full, b_tz_full);
