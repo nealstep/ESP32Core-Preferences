@@ -154,6 +154,9 @@ void setup() {
     good &=
         handle_u32(Prefs::Keys::keep_alive_int, prefs.keep_alive_int,
                    Desired::keep_alive_int, Prefs::BadValues::keep_alive_int);
+    good &= handle_u32(Prefs::Keys::check_internet_int,
+                       prefs.check_internet_int, Desired::check_internet_int,
+                       Prefs::BadValues::check_internet_int);
     good &=
         handle_chars(Prefs::Keys::tz_full, prefs.tz_full, Prefs::Sizes::tz_full,
                      Desired::tz_full, Prefs::BadValues::tz_full);

@@ -15,6 +15,8 @@ class Prefs {
        public:
         static constexpr const char* const use_serial = "use_serial";
         static constexpr const char* const serial_speed = "serial_speed";
+        static constexpr const char* const keep_alive_int = "keep_alive_int";
+        static constexpr const char* const check_internet_int = "chk_inter_int";
         static constexpr const char* const tz_full = "tz_full";
         static constexpr const char* const wifi_ssid = "wifi_ssid";
         static constexpr const char* const wifi_password = "wifi_password";
@@ -25,12 +27,13 @@ class Prefs {
         static constexpr const char* const internet_queue_size = "internetq_sz";
         static constexpr const char* const use_aes = "use_aes";
         static constexpr const char* const hex_key = "hex_key";
-        static constexpr const char* const keep_alive_int = "keep_alive_int";
     };
 
     class BadValues {
        public:
         static constexpr uint32_t serial_speed = 1;
+        static constexpr uint32_t keep_alive_int = 1;
+        static constexpr uint32_t check_internet_int = 1;
         static constexpr const char* const tz_full = "X";
         static constexpr const char* const wifi_ssid = "X";
         static constexpr const char* const wifi_password = "X";
@@ -39,7 +42,6 @@ class Prefs {
         static constexpr uint16_t local_queue_size = 1;
         static constexpr uint16_t internet_queue_size = 1;
         static constexpr const char* const hex_key = "X";
-        static constexpr uint32_t keep_alive_int = 1;
     };
 
     class Sizes {
@@ -56,10 +58,14 @@ class Prefs {
         static constexpr bool use_serial = true;
         static constexpr uint32_t serial_speed = SERIAL_SPEED;
         static constexpr uint32_t keep_alive_int = 15 * Constants::sec_ms;
+        static constexpr uint32_t check_internet_int =
+            1 * Constants::min_sec * Constants::sec_ms;
     };
 
     bool use_serial = Defaults::use_serial;
     uint32_t serial_speed = Defaults::serial_speed;
+    uint32_t keep_alive_int = Defaults::keep_alive_int;
+    uint32_t check_internet_int = Defaults::check_internet_int;
     char tz_full[Sizes::tz_full];
     char wifi_ssid[Sizes::wifi_ssid];
     char wifi_password[Sizes::wifi_password];
@@ -70,7 +76,6 @@ class Prefs {
     uint16_t internet_queue_size;
     bool use_aes;
     char hex_key[Sizes::hex_key];
-    uint32_t keep_alive_int = Defaults::keep_alive_int;
 
     // lazy singleton
     static Prefs& getInstance(void) {
