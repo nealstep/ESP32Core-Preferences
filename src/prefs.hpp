@@ -7,6 +7,8 @@
 #include <Preferences.h>
 #endif  // ARDUINO_ARCH_ESP32
 
+#include "constants.hpp"
+
 class Prefs {
    public:
     class Keys {
@@ -19,12 +21,11 @@ class Prefs {
         static constexpr const char* const ota_password = "ota_password";
         static constexpr const char* const udp_data_port = "udp_data_port";
         static constexpr const char* const use_queue = "use_queue";
-        static constexpr const char* const local_queue_size =
-            "localq_sz";
-        static constexpr const char* const internet_queue_size =
-            "internetq_sz";
+        static constexpr const char* const local_queue_size = "localq_sz";
+        static constexpr const char* const internet_queue_size = "internetq_sz";
         static constexpr const char* const use_aes = "use_aes";
         static constexpr const char* const hex_key = "hex_key";
+        static constexpr const char* const keep_alive_int = "keep_alive_int";
     };
 
     class BadValues {
@@ -38,6 +39,7 @@ class Prefs {
         static constexpr uint16_t local_queue_size = 1;
         static constexpr uint16_t internet_queue_size = 1;
         static constexpr const char* const hex_key = "X";
+        static constexpr uint32_t keep_alive_int = 1;
     };
 
     class Sizes {
@@ -49,8 +51,15 @@ class Prefs {
         static constexpr size_t hex_key = 65 + 1;
     };
 
-    bool use_serial;
-    uint32_t serial_speed;
+    class Defaults {
+       public:
+        static constexpr bool use_serial = true;
+        static constexpr uint32_t serial_speed = SERIAL_SPEED;
+        static constexpr uint32_t keep_alive_int = 15 * Constants::sec_ms;
+    };
+
+    bool use_serial = Defaults::use_serial;
+    uint32_t serial_speed = Defaults::serial_speed;
     char tz_full[Sizes::tz_full];
     char wifi_ssid[Sizes::wifi_ssid];
     char wifi_password[Sizes::wifi_password];
@@ -61,6 +70,7 @@ class Prefs {
     uint16_t internet_queue_size;
     bool use_aes;
     char hex_key[Sizes::hex_key];
+    uint32_t keep_alive_int = Defaults::keep_alive_int;
 
     // lazy singleton
     static Prefs& getInstance(void) {
@@ -95,5 +105,13 @@ class Prefs {
 };
 
 static Prefs& prefs = Prefs::getInstance();
+
+void get_pref_bool(const char* key, bool& val, bool verbose = true);
+void get_pref_u16(const char* key, uint16_t& val, uint16_t bad,
+                  bool verbose = true);
+void get_pref_u32(const char* key, uint32_t& val, uint32_t bad,
+                  bool verbose = true);
+void get_pref_str(const char* key, char* buf, size_t buf_len, const char* bad,
+                  bool verbose = true);
 
 #endif  // ARDUINO

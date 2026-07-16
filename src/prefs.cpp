@@ -1,6 +1,7 @@
 #ifdef ARDUINO
 
 #include "e32c_log.hpp"
+#include "utils.hpp"
 
 #ifdef ARDUINO_ARCH_ESP32
 
@@ -83,8 +84,6 @@ Log::Err Prefs::get_chars(const char* key, char* buffer, size_t buf_len,
     Log::Err err = Log::Err::NoError;
     if (preferences.isKey(key)) {
         size_t len = preferences.getString(key, buffer, buf_len);
-        Serial.printf("Length: %d\n", len);
-        Serial.printf("Buf Len: %d\n", buf_len -1);
         if ((len == 0) || (len > buf_len - 1)) {
             err = Log::Err::NoPref;
         }
@@ -157,6 +156,50 @@ void Prefs::close(void) {
 #else
 #error "Only ESP32 Supported"
 #endif  // ARDUINO_ARCH_ESP32
+}
+
+void get_pref_bool(const char* key, bool& val, bool verbose) {
+    Log::Err err = prefs.get_bool(key, val);
+    if (err != Log::Err::NoError) {
+        LOG_E(Log::Uni::Pref, err, key);
+        die();
+    }
+    if (verbose) {
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, b2s(val));
+    }
+}
+
+void get_pref_u16(const char* key, uint16_t& val, uint16_t bad, bool verbose) {
+    Log::Err err = prefs.get_u16(key, val, bad);
+    if (err != Log::Err::NoError) {
+        LOG_E(Log::Uni::Pref, err, key);
+        die();
+    }
+    if (verbose) {
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadU, key, val);
+    }
+}
+
+void get_pref_u32(const char* key, uint32_t& val, uint32_t bad, bool verbose) {
+    Log::Err err = prefs.get_u32(key, val, bad);
+    if (err != Log::Err::NoError) {
+        LOG_E(Log::Uni::Pref, err, key);
+        die();
+    }
+    if (verbose) {
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadU, key, val);
+    }
+}
+
+void get_pref_str(const char* key, char* buf, size_t buf_len, const char* bad, bool verbose) {
+    Log::Err err = prefs.get_chars(key, buf, buf_len, bad);
+    if (err != Log::Err::NoError) {
+        LOG_E(Log::Uni::Pref, err, key);
+        die();
+    }
+    if (verbose) {
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, buf);
+    }
 }
 
 #endif  // ARDUINO

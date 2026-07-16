@@ -3,50 +3,44 @@
 #include "desired.hpp"
 #include "e32c_log.hpp"
 #include "prefs.hpp"
+#include "utils.hpp"
 
 static constexpr const char* const prefs_name = PREFS_NAME;
 
 // update values
-bool update = false;
+bool update = true;
 
 // startup delay
 static constexpr uint32_t startup_delay = 3000;
 static constexpr uint32_t medium_delay = 500;
 
-void die(void) {
-    LOG_E(Log::Uni::Main, Log::Err::Died);
-    while (true) {
-        delay(medium_delay);
-    }
-}
-
 // handle display and optional setting of various types
 bool handle_bool(const char* key, bool& value, bool desired_value) {
-    Serial.println();
-    Serial.printf("%s (desired): %u\n", key, desired_value);
+    LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefDesS, key,
+          b2s(desired_value));
     Log::Err err = prefs.get_bool(key, value);
     if (err == Log::Err::NoError) {
-        Serial.printf("%s: %u\n", key, value);
+        LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefReadS, key,
+              b2s(value));
     } else {
-        Serial.printf("%s: not found\n", key);
-        LOG_E(Log::Uni::Main, err);
+        LOG_E(Log::Uni::Main, err, key);
         value = !desired_value;
     }
     if (value != desired_value) {
         if (update) {
             err = prefs.set_bool(key, desired_value);
             if (err == Log::Err::NoError) {
-                Serial.printf("%s: updated to %s\n", key,
-                              desired_value ? "true" : "false");
+                LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefUpdS, key,
+                      b2s(desired_value));
             } else {
-                Serial.printf("%s: update failed\n", key);
+                LOG_E(Log::Uni::Main, err, key);
             }
         } else {
-            Serial.printf("%s: NOT updating from %u to %u\n", key, value,
-                          desired_value);
+            LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefNotUpdS, key,
+                  b2s(desired_value));
         }
     } else {
-        Serial.printf("%s: already set to desired value\n", key);
+        LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefAlready, key);
         return true;
     }
     return false;
@@ -54,30 +48,29 @@ bool handle_bool(const char* key, bool& value, bool desired_value) {
 
 bool handle_u16(const char* key, uint16_t& value, uint16_t desired_value,
                 uint16_t bad_value) {
-    Serial.println();
-    Serial.printf("%s (desired): %u\n", key, desired_value);
+    LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefDesU, key,
+          desired_value);
     Log::Err err = prefs.get_u16(key, value, bad_value);
     if (err == Log::Err::NoError) {
-        Serial.printf("%s: %u\n", key, value);
+        LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefReadU, key, value);
     } else {
-        Serial.printf("%s: unset\n", key);
-        LOG_E(Log::Uni::Main, err);
-        value = bad_value;
+        LOG_E(Log::Uni::Main, err, key);
     }
     if (value != desired_value) {
         if (update) {
             err = prefs.set_u16(key, desired_value);
             if (err == Log::Err::NoError) {
-                Serial.printf("%s: updated to %u\n", key, desired_value);
+                LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefUpdU, key,
+                      desired_value);
             } else {
-                Serial.printf("%s: update failed\n", key);
+                LOG_E(Log::Uni::Main, err, key);
             }
         } else {
-            Serial.printf("%s: NOT updating from %u to %u\n", key, value,
-                          desired_value);
+            LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefNotUpdU, key,
+                  desired_value);
         }
     } else {
-        Serial.printf("%s: already set to desired value\n", key);
+        LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefAlready, key);
         return true;
     }
     return false;
@@ -85,30 +78,29 @@ bool handle_u16(const char* key, uint16_t& value, uint16_t desired_value,
 
 bool handle_u32(const char* key, uint32_t& value, uint32_t desired_value,
                 uint32_t bad_value) {
-    Serial.println();
-    Serial.printf("%s (desired): %u\n", key, desired_value);
+    LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefDesU, key,
+          desired_value);
     Log::Err err = prefs.get_u32(key, value, bad_value);
     if (err == Log::Err::NoError) {
-        Serial.printf("%s: %u\n", key, value);
+        LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefReadU, key, value);
     } else {
-        Serial.printf("%s: unset\n", key);
-        LOG_E(Log::Uni::Main, err);
-        value = bad_value;
+        LOG_E(Log::Uni::Main, err, key);
     }
     if (value != desired_value) {
         if (update) {
             err = prefs.set_u32(key, desired_value);
             if (err == Log::Err::NoError) {
-                Serial.printf("%s: updated to %u\n", key, desired_value);
+                LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefUpdU, key,
+                      desired_value);
             } else {
-                Serial.printf("%s: update failed\n", key);
+                LOG_E(Log::Uni::Main, err, key);
             }
         } else {
-            Serial.printf("%s: NOT updating from %u to %u\n", key, value,
-                          desired_value);
+            LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefNotUpdU, key,
+                  desired_value);
         }
     } else {
-        Serial.printf("%s: already set to desired value\n", key);
+        LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefAlready, key);
         return true;
     }
     return false;
@@ -116,29 +108,29 @@ bool handle_u32(const char* key, uint32_t& value, uint32_t desired_value,
 
 bool handle_chars(const char* key, char* value, size_t value_size,
                   const char* desired_value, const char* bad_value) {
-    Serial.println();
-    Serial.printf("%s (desired): %s\n", key, desired_value);
+    LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefDesS, key,
+          desired_value);
     Log::Err err = prefs.get_chars(key, value, value_size, bad_value);
     if (err == Log::Err::NoError) {
-        Serial.printf("%s: %s\n", key, value);
+        LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefReadS, key, value);
     } else {
-        Serial.printf("%s: unset\n", key);
-        LOG_E(Log::Uni::Main, err);
+        LOG_E(Log::Uni::Main, err, key);
     }
     if (strncmp(value, desired_value, strlen(value)) != 0) {
         if (update) {
             err = prefs.set_chars(key, desired_value);
             if (err == Log::Err::NoError) {
-                Serial.printf("%s: updated to %s\n", key, desired_value);
+                LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefUpdS, key,
+                      desired_value);
             } else {
-                Serial.printf("%s: update failed\n", key);
+                LOG_E(Log::Uni::Main, err, key);
             }
         } else {
-            Serial.printf("%s: NOT updating from %s to %s\n", key, value,
-                          desired_value);
+            LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefNotUpdU, key,
+                  desired_value);
         }
     } else {
-        Serial.printf("%s: already set to desired value\n", key);
+        LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::PrefAlready, key);
         return true;
     }
     return false;
@@ -147,9 +139,7 @@ bool handle_chars(const char* key, char* value, size_t value_size,
 void setup() {
     Serial.begin(Desired::serial_speed);
     delay(startup_delay);
-    Serial.println();
-    Serial.println("Preferences Starting");
-
+    LOG_N(Log::Uni::Main, Log::Sev::All, Log::Note::Starting);
     Log::Err err = prefs.open(prefs_name, !update);
     if (err != Log::Err::NoError) {
         LOG_E(Log::Uni::Main, err);
@@ -161,6 +151,9 @@ void setup() {
                        Desired::use_serial);
     good &= handle_u32(Prefs::Keys::serial_speed, prefs.serial_speed,
                        Desired::serial_speed, Prefs::BadValues::serial_speed);
+    good &=
+        handle_u32(Prefs::Keys::keep_alive_int, prefs.keep_alive_int,
+                   Desired::keep_alive_int, Prefs::BadValues::keep_alive_int);
     good &=
         handle_chars(Prefs::Keys::tz_full, prefs.tz_full, Prefs::Sizes::tz_full,
                      Desired::tz_full, Prefs::BadValues::tz_full);
@@ -189,11 +182,9 @@ void setup() {
                      Desired::hex_key, Prefs::BadValues::hex_key);
 
     if (good) {
-        Serial.println();
-        Serial.println("All Values set and correct");
+        LOG_N(Log::Uni::Main, Log::Sev::All, Log::Note::AllGood);
     }
-    Serial.println();
-    Serial.println("Preferences Finished");
+    LOG_N(Log::Uni::Main, Log::Sev::Inf, Log::Note::Started);
     prefs.close();
 }
 
