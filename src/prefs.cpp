@@ -166,6 +166,8 @@ void get_pref_bool(const char* key, bool& val, bool verbose) {
     }
     if (verbose) {
         LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, b2s(val));
+    } else {
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, Log::Word::XXX);
     }
 }
 
@@ -177,6 +179,8 @@ void get_pref_u16(const char* key, uint16_t& val, uint16_t bad, bool verbose) {
     }
     if (verbose) {
         LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadU, key, val);
+    } else {
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, Log::Word::XXX);
     }
 }
 
@@ -188,6 +192,8 @@ void get_pref_u32(const char* key, uint32_t& val, uint32_t bad, bool verbose) {
     }
     if (verbose) {
         LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadU, key, val);
+    } else {
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, Log::Word::XXX);
     }
 }
 
@@ -199,6 +205,8 @@ void get_pref_str(const char* key, char* buf, size_t buf_len, const char* bad, b
     }
     if (verbose) {
         LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, buf);
+    } else {
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, Log::Word::XXX);
     }
 }
 

@@ -31,7 +31,9 @@
     X(PrefAlready, "Already Desired value: %s")  \
     X(AllGood, "All Values set and correct")
 
-#define WORD_LIST(X) X(Unknown, "Unknown")
+#define WORD_LIST(X)      \
+    X(Unknown, "Unknown") \
+    X(XXX, "XXX")
 
 #define SEVERITY_LIST(X) \
     X(Dbg, "Debug")      \
