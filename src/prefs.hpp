@@ -3,54 +3,97 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
+#ifdef ARDUINO_ARCH_ESP32
+#include <Preferences.h>
+#endif  // ARDUINO_ARCH_ESP32
 
-// namespace for preferences
-static constexpr const char* const namespace_name = NAMESPACE;
+class Prefs {
+   public:
+    class Keys {
+       public:
+        static constexpr const char* const use_serial = "use_serial";
+        static constexpr const char* const serial_speed = "serial_speed";
+        static constexpr const char* const tz_full = "tz_full";
+        static constexpr const char* const wifi_ssid = "wifi_ssid";
+        static constexpr const char* const wifi_password = "wifi_password";
+        static constexpr const char* const ota_password = "ota_password";
+        static constexpr const char* const udp_data_port = "udp_data_port";
+        static constexpr const char* const use_queue = "use_queue";
+        static constexpr const char* const local_queue_size =
+            "localq_sz";
+        static constexpr const char* const internet_queue_size =
+            "internetq_sz";
+        static constexpr const char* const use_aes = "use_aes";
+        static constexpr const char* const hex_key = "hex_key";
+    };
 
-// keys
-static constexpr const char* const k_use_serial = "use_serial";
-static constexpr const char* const k_serial_speed = "serial_speed";
-static constexpr const char* const k_tz_full = "tz_full";
-static constexpr const char* const k_wifi_ssid = "wifi_ssid";
-static constexpr const char* const k_wifi_password = "wifi_password";
-static constexpr const char* const k_ota_password = "ota_password";
-static constexpr const char* const k_udp_data_port = "udp_data_port";
-static constexpr const char* const k_use_queue = "use_queue";
-static constexpr const char* const k_local_queue_size = "local_queue_size";
-static constexpr const char* const k_internet_queue_size = "internet_queue_size";
-static constexpr const char* const k_use_aes = "use_aes";
-static constexpr const char* const k_hex_key = "hex_key";
+    class BadValues {
+       public:
+        static constexpr uint32_t serial_speed = 1;
+        static constexpr const char* const tz_full = "X";
+        static constexpr const char* const wifi_ssid = "X";
+        static constexpr const char* const wifi_password = "X";
+        static constexpr const char* const ota_password = "X";
+        static constexpr uint16_t udp_data_port = 1;
+        static constexpr uint16_t local_queue_size = 1;
+        static constexpr uint16_t internet_queue_size = 1;
+        static constexpr const char* const hex_key = "X";
+    };
 
-// bad values
-static constexpr uint32_t b_serial_speed = 1;
-static constexpr const char* const b_tz_full = "X";
-static constexpr const char* const b_wifi_ssid = "X";
-static constexpr const char* const b_wifi_password = "X";
-static constexpr const char* const b_ota_password = "X";
-static constexpr uint16_t b_udp_data_port = 1;
-static constexpr uint16_t b_local_queue_size = 1;
-static constexpr uint16_t b_internet_queue_size = 1;
-static constexpr const char* const b_hex_key = "X";
+    class Sizes {
+       public:
+        static constexpr size_t tz_full = 128 + 1;
+        static constexpr size_t wifi_ssid = 32 + 1;
+        static constexpr size_t wifi_password = 64 + 1;
+        static constexpr size_t ota_password = 64 + 1;
+        static constexpr size_t hex_key = 65 + 1;
+    };
 
-// sizes (adding one so if stored string is too long, we can detect it)
-static constexpr size_t tz_full_size = 128 + 1;
-static constexpr size_t wifi_ssid_size = 32 + 1;
-static constexpr size_t wifi_password_size = 64 + 1;
-static constexpr size_t ota_password_size = 64 + 1;
-static constexpr size_t hex_key_size = 65 + 1;
+    bool use_serial;
+    uint32_t serial_speed;
+    char tz_full[Sizes::tz_full];
+    char wifi_ssid[Sizes::wifi_ssid];
+    char wifi_password[Sizes::wifi_password];
+    char ota_password[Sizes::ota_password];
+    uint16_t udp_data_port;
+    bool use_queue;
+    uint16_t local_queue_size;
+    uint16_t internet_queue_size;
+    bool use_aes;
+    char hex_key[Sizes::hex_key];
 
-// variables to store values
-extern bool use_serial;
-extern uint32_t serial_speed;
-extern char tz_full[tz_full_size];
-extern char wifi_ssid[wifi_ssid_size];
-extern char wifi_password[wifi_password_size];
-extern char ota_password[ota_password_size];
-extern uint16_t udp_data_port;
-extern bool use_queue;
-extern uint16_t local_queue_size;
-extern uint16_t internet_queue_size;
-extern bool use_aes;
-extern char hex_key[hex_key_size];
+    // lazy singleton
+    static Prefs& getInstance(void) {
+        static Prefs instance;
+        return instance;
+    }
+    Prefs(const Prefs&) = delete;
+    Prefs& operator=(const Prefs&) = delete;
+
+    Log::Err open(const char* name, const bool read_only);
+
+    Log::Err get_bool(const char* key, bool& val);
+    Log::Err get_u16(const char* key, uint16_t& val, const uint16_t bad);
+    Log::Err get_u32(const char* key, uint32_t& val, const uint32_t bad);
+    Log::Err get_chars(const char* key, char* buffer, size_t buf_len,
+                       const char* bad);
+
+    Log::Err set_bool(const char* key, const bool val);
+    Log::Err set_u16(const char* key, const uint16_t val);
+    Log::Err set_u32(const char* key, const uint32_t val);
+    Log::Err set_chars(const char* key, const char* buffer);
+
+    void close(void);
+
+   private:
+#ifdef ARDUINO_ARCH_ESP32
+    Preferences preferences;
+#endif  /// ARDUINO_ARCH_ESP32
+
+    // hidden creator
+    Prefs(void) {};
+};
+
+static Prefs& prefs = Prefs::getInstance();
 
 #endif  // ARDUINO

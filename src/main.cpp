@@ -1,37 +1,45 @@
 #include <Arduino.h>
-#include <Preferences.h>
 
 #include "desired.hpp"
+#include "e32c_log.hpp"
 #include "prefs.hpp"
-#include "vars.hpp"
 
-Preferences preferences;
+static constexpr const char* const prefs_name = PREFS_NAME;
 
 // update values
-bool update = true;
+bool update = false;
 
 // startup delay
 static constexpr uint32_t startup_delay = 3000;
 static constexpr uint32_t medium_delay = 500;
 
+void die(void) {
+    LOG_E(Log::Uni::Main, Log::Err::Died);
+    while (true) {
+        delay(medium_delay);
+    }
+}
+
 // handle display and optional setting of various types
-void handle_bool(const char* key, bool& value, bool desired_value) {
+bool handle_bool(const char* key, bool& value, bool desired_value) {
     Serial.println();
     Serial.printf("%s (desired): %u\n", key, desired_value);
-    if (preferences.isKey(key)) {
-        value = preferences.getBool(key);
+    Log::Err err = prefs.get_bool(key, value);
+    if (err == Log::Err::NoError) {
         Serial.printf("%s: %u\n", key, value);
     } else {
         Serial.printf("%s: not found\n", key);
+        LOG_E(Log::Uni::Main, err);
         value = !desired_value;
     }
     if (value != desired_value) {
         if (update) {
-            size_t len = preferences.putBool(key, desired_value);
-            if (len == 0) {
-                Serial.printf("%s: update failed\n", key);
+            err = prefs.set_bool(key, desired_value);
+            if (err == Log::Err::NoError) {
+                Serial.printf("%s: updated to %s\n", key,
+                              desired_value ? "true" : "false");
             } else {
-                Serial.printf("%s: updated to %u\n", key, desired_value);
+                Serial.printf("%s: update failed\n", key);
             }
         } else {
             Serial.printf("%s: NOT updating from %u to %u\n", key, value,
@@ -39,31 +47,30 @@ void handle_bool(const char* key, bool& value, bool desired_value) {
         }
     } else {
         Serial.printf("%s: already set to desired value\n", key);
+        return true;
     }
+    return false;
 }
 
-void handle_u16(const char* key, uint16_t& value, uint16_t desired_value,
+bool handle_u16(const char* key, uint16_t& value, uint16_t desired_value,
                 uint16_t bad_value) {
     Serial.println();
     Serial.printf("%s (desired): %u\n", key, desired_value);
-    if (preferences.isKey(key)) {
-        value = preferences.getUShort(key, bad_value);
-        if (value == bad_value) {
-            Serial.printf("%s: unset\n", key);
-        } else {
-            Serial.printf("%s: %u\n", key, value);
-        }
+    Log::Err err = prefs.get_u16(key, value, bad_value);
+    if (err == Log::Err::NoError) {
+        Serial.printf("%s: %u\n", key, value);
     } else {
-        Serial.printf("%s: not found\n", key);
+        Serial.printf("%s: unset\n", key);
+        LOG_E(Log::Uni::Main, err);
         value = bad_value;
     }
     if (value != desired_value) {
         if (update) {
-            size_t len = preferences.putUShort(key, desired_value);
-            if (len == 0) {
-                Serial.printf("%s: update failed\n", key);
-            } else {
+            err = prefs.set_u16(key, desired_value);
+            if (err == Log::Err::NoError) {
                 Serial.printf("%s: updated to %u\n", key, desired_value);
+            } else {
+                Serial.printf("%s: update failed\n", key);
             }
         } else {
             Serial.printf("%s: NOT updating from %u to %u\n", key, value,
@@ -71,31 +78,30 @@ void handle_u16(const char* key, uint16_t& value, uint16_t desired_value,
         }
     } else {
         Serial.printf("%s: already set to desired value\n", key);
+        return true;
     }
+    return false;
 }
 
-void handle_u32(const char* key, uint32_t& value, uint32_t desired_value,
+bool handle_u32(const char* key, uint32_t& value, uint32_t desired_value,
                 uint32_t bad_value) {
     Serial.println();
     Serial.printf("%s (desired): %u\n", key, desired_value);
-    if (preferences.isKey(key)) {
-        value = preferences.getUInt(key, bad_value);
-        if (value == bad_value) {
-            Serial.printf("%s: unset\n", key);
-        } else {
-            Serial.printf("%s: %u\n", key, value);
-        }
+    Log::Err err = prefs.get_u32(key, value, bad_value);
+    if (err == Log::Err::NoError) {
+        Serial.printf("%s: %u\n", key, value);
     } else {
-        Serial.printf("%s: not found\n", key);
+        Serial.printf("%s: unset\n", key);
+        LOG_E(Log::Uni::Main, err);
         value = bad_value;
     }
     if (value != desired_value) {
         if (update) {
-            size_t len = preferences.putUInt(key, desired_value);
-            if (len == 0) {
-                Serial.printf("%s: update failed\n", key);
-            } else {
+            err = prefs.set_u32(key, desired_value);
+            if (err == Log::Err::NoError) {
                 Serial.printf("%s: updated to %u\n", key, desired_value);
+            } else {
+                Serial.printf("%s: update failed\n", key);
             }
         } else {
             Serial.printf("%s: NOT updating from %u to %u\n", key, value,
@@ -103,33 +109,29 @@ void handle_u32(const char* key, uint32_t& value, uint32_t desired_value,
         }
     } else {
         Serial.printf("%s: already set to desired value\n", key);
+        return true;
     }
+    return false;
 }
 
-void handle_chars(const char* key, char* value, size_t value_size,
+bool handle_chars(const char* key, char* value, size_t value_size,
                   const char* desired_value, const char* bad_value) {
     Serial.println();
     Serial.printf("%s (desired): %s\n", key, desired_value);
-    if (preferences.isKey(key)) {
-        size_t len = preferences.getString(key, value, value_size);
-        if (len == 0) {
-            Serial.printf("%s: unset\n", key);
-        } else if (len >= value_size - 1) {
-            Serial.printf("%s: too long\n", key);
-        } else {
-            Serial.printf("%s: %s\n", key, value);
-        }
+    Log::Err err = prefs.get_chars(key, value, value_size, bad_value);
+    if (err == Log::Err::NoError) {
+        Serial.printf("%s: %s\n", key, value);
     } else {
-        Serial.printf("%s: not found\n", key);
-        strcpy(value, bad_value);
+        Serial.printf("%s: unset\n", key);
+        LOG_E(Log::Uni::Main, err);
     }
-    if (strcmp(value, desired_value) != 0) {
+    if (strncmp(value, desired_value, strlen(value)) != 0) {
         if (update) {
-            size_t len = preferences.putString(key, desired_value);
-            if (len == 0) {
-                Serial.printf("%s: update failed\n", key);
-            } else {
+            err = prefs.set_chars(key, desired_value);
+            if (err == Log::Err::NoError) {
                 Serial.printf("%s: updated to %s\n", key, desired_value);
+            } else {
+                Serial.printf("%s: update failed\n", key);
             }
         } else {
             Serial.printf("%s: NOT updating from %s to %s\n", key, value,
@@ -137,39 +139,62 @@ void handle_chars(const char* key, char* value, size_t value_size,
         }
     } else {
         Serial.printf("%s: already set to desired value\n", key);
+        return true;
     }
+    return false;
 }
 
 void setup() {
-    Serial.begin(serial_speed);
+    Serial.begin(Desired::serial_speed);
     delay(startup_delay);
     Serial.println();
     Serial.println("Preferences Starting");
 
-    preferences.begin(namespace_name, false);
+    Log::Err err = prefs.open(prefs_name, !update);
+    if (err != Log::Err::NoError) {
+        LOG_E(Log::Uni::Main, err);
+        die();
+    }
 
-    handle_bool(k_use_serial, use_serial, c_use_serial);
-    handle_u32(k_serial_speed, serial_speed, c_serial_speed, b_serial_speed);
-    handle_chars(k_tz_full, tz_full, sizeof(tz_full), c_tz_full, b_tz_full);
-    handle_chars(k_wifi_ssid, wifi_ssid, sizeof(wifi_ssid), c_wifi_ssid,
-                 b_wifi_ssid);
-    handle_chars(k_wifi_password, wifi_password, sizeof(wifi_password),
-                 c_wifi_password, b_wifi_password);
-    handle_chars(k_ota_password, ota_password, sizeof(ota_password),
-                 c_ota_password, b_ota_password);
-    handle_u16(k_udp_data_port, udp_data_port, c_udp_data_port,
-               b_udp_data_port);
-    handle_bool(k_use_queue, use_queue, c_use_queue);
-    handle_u16(k_local_queue_size, local_queue_size, c_local_queue_size,
-               b_local_queue_size);
-    handle_u16(k_internet_queue_size, internet_queue_size,
-               c_internet_queue_size, b_internet_queue_size);
-    handle_bool(k_use_aes, use_aes, c_use_aes);
-    handle_chars(k_hex_key, hex_key, sizeof(hex_key), c_hex_key, b_hex_key);
+    bool good;
+    good = handle_bool(Prefs::Keys::use_serial, prefs.use_serial,
+                       Desired::use_serial);
+    good &= handle_u32(Prefs::Keys::serial_speed, prefs.serial_speed,
+                       Desired::serial_speed, Prefs::BadValues::serial_speed);
+    good &=
+        handle_chars(Prefs::Keys::tz_full, prefs.tz_full, Prefs::Sizes::tz_full,
+                     Desired::tz_full, Prefs::BadValues::tz_full);
+    good &= handle_chars(Prefs::Keys::wifi_ssid, prefs.wifi_ssid,
+                         Prefs::Sizes::wifi_ssid, Desired::wifi_ssid,
+                         Prefs::BadValues::wifi_ssid);
+    good &= handle_chars(Prefs::Keys::wifi_password, prefs.wifi_password,
+                         Prefs::Sizes::wifi_password, Desired::wifi_password,
+                         Prefs::BadValues::wifi_password);
+    good &= handle_chars(Prefs::Keys::ota_password, prefs.ota_password,
+                         Prefs::Sizes::ota_password, Desired::ota_password,
+                         Prefs::BadValues::ota_password);
+    good &= handle_u16(Prefs::Keys::udp_data_port, prefs.udp_data_port,
+                       Desired::udp_data_port, Prefs::BadValues::udp_data_port);
+    good &= handle_bool(Prefs::Keys::use_queue, prefs.use_queue,
+                        Desired::use_queue);
+    good &= handle_u16(Prefs::Keys::local_queue_size, prefs.local_queue_size,
+                       Desired::local_queue_size,
+                       Prefs::BadValues::local_queue_size);
+    good &= handle_u16(Prefs::Keys::internet_queue_size,
+                       prefs.internet_queue_size, Desired::internet_queue_size,
+                       Prefs::BadValues::internet_queue_size);
+    good &= handle_bool(Prefs::Keys::use_aes, prefs.use_aes, Desired::use_aes);
+    good &=
+        handle_chars(Prefs::Keys::hex_key, prefs.hex_key, Prefs::Sizes::hex_key,
+                     Desired::hex_key, Prefs::BadValues::hex_key);
 
+    if (good) {
+        Serial.println();
+        Serial.println("All Values set and correct");
+    }
     Serial.println();
     Serial.println("Preferences Finished");
-    preferences.end();
+    prefs.close();
 }
 
 void loop() { delay(medium_delay); }
