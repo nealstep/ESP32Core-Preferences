@@ -151,6 +151,9 @@ void setup() {
                        Desired::use_serial);
     good &= handle_u32(Prefs::Keys::serial_speed, prefs.serial_speed,
                        Desired::serial_speed, Prefs::BadValues::serial_speed);
+    good &= handle_chars(Prefs::Keys::chip_name, prefs.chip_name,
+                         Prefs::Sizes::chip_name, Desired::chip_name,
+                         Prefs::BadValues::chip_name);
     good &=
         handle_u32(Prefs::Keys::keep_alive_int, prefs.keep_alive_int,
                    Desired::keep_alive_int, Prefs::BadValues::keep_alive_int);
@@ -180,9 +183,14 @@ void setup() {
                        prefs.internet_queue_size, Desired::internet_queue_size,
                        Prefs::BadValues::internet_queue_size);
     good &= handle_bool(Prefs::Keys::use_aes, prefs.use_aes, Desired::use_aes);
+    good &= handle_bool(Prefs::Keys::encrypt_local, prefs.encrypt_local,
+                        Desired::encrypt_local);
     good &=
         handle_chars(Prefs::Keys::hex_key, prefs.hex_key, Prefs::Sizes::hex_key,
                      Desired::hex_key, Prefs::BadValues::hex_key);
+    good &= handle_chars(Prefs::Keys::remote_host, prefs.remote_host,
+                         Prefs::Sizes::remote_host, Desired::remote_host,
+                         Prefs::BadValues::remote_host);
 
     if (good) {
         LOG_N(Log::Uni::Main, Log::Sev::All, Log::Note::AllGood);
