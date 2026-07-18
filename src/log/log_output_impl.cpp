@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
-#include <e32c_log.hpp>
-#include <prefs.hpp>
+#include "e32c_log.hpp"
 
 void log_output_impl(const char* str, bool error, bool truncated) {
     if (error) {

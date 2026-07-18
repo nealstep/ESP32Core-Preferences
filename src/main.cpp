@@ -1,9 +1,9 @@
 #include <Arduino.h>
 
 #include "desired.hpp"
-#include "e32c_log.hpp"
-#include "prefs.hpp"
-#include "utils.hpp"
+#include "log/e32c_log.hpp"
+#include "prefs/prefs.hpp"
+#include "utils/utils.hpp"
 
 static constexpr const char* const prefs_name = PREFS_NAME;
 

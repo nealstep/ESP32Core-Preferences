@@ -15,6 +15,7 @@ class Prefs {
        public:
         static constexpr const char* const use_serial = "use_serial";
         static constexpr const char* const serial_speed = "serial_speed";
+        static constexpr const char* const chip_name = "chip_name";
         static constexpr const char* const keep_alive_int = "keep_alive_int";
         static constexpr const char* const check_internet_int = "chk_inter_int";
         static constexpr const char* const tz_full = "tz_full";
@@ -26,12 +27,15 @@ class Prefs {
         static constexpr const char* const local_queue_size = "localq_sz";
         static constexpr const char* const internet_queue_size = "internetq_sz";
         static constexpr const char* const use_aes = "use_aes";
+        static constexpr const char* const encrypt_local = "encrypt_local";
         static constexpr const char* const hex_key = "hex_key";
+        static constexpr const char* const remote_host = "remote_host";
     };
 
     class BadValues {
        public:
         static constexpr uint32_t serial_speed = 1;
+        static constexpr const char* const chip_name = "X";
         static constexpr uint32_t keep_alive_int = 1;
         static constexpr uint32_t check_internet_int = 1;
         static constexpr const char* const tz_full = "X";
@@ -42,30 +46,25 @@ class Prefs {
         static constexpr uint16_t local_queue_size = 1;
         static constexpr uint16_t internet_queue_size = 1;
         static constexpr const char* const hex_key = "X";
+        static constexpr const char* const remote_host = "X";
     };
 
     class Sizes {
        public:
+        static constexpr size_t chip_name = 32 + 1;
         static constexpr size_t tz_full = 128 + 1;
         static constexpr size_t wifi_ssid = 32 + 1;
         static constexpr size_t wifi_password = 64 + 1;
         static constexpr size_t ota_password = 64 + 1;
         static constexpr size_t hex_key = 65 + 1;
+        static constexpr size_t remote_host = 253 + 1;
     };
 
-    class Defaults {
-       public:
-        static constexpr bool use_serial = true;
-        static constexpr uint32_t serial_speed = SERIAL_SPEED;
-        static constexpr uint32_t keep_alive_int = 15 * Constants::sec_ms;
-        static constexpr uint32_t check_internet_int =
-            1 * Constants::min_sec * Constants::sec_ms;
-    };
-
-    bool use_serial = Defaults::use_serial;
-    uint32_t serial_speed = Defaults::serial_speed;
-    uint32_t keep_alive_int = Defaults::keep_alive_int;
-    uint32_t check_internet_int = Defaults::check_internet_int;
+    bool use_serial;
+    uint32_t serial_speed;
+    char chip_name[Sizes::chip_name];
+    uint32_t keep_alive_int;
+    uint32_t check_internet_int;
     char tz_full[Sizes::tz_full];
     char wifi_ssid[Sizes::wifi_ssid];
     char wifi_password[Sizes::wifi_password];
@@ -75,7 +74,9 @@ class Prefs {
     uint16_t local_queue_size;
     uint16_t internet_queue_size;
     bool use_aes;
+    bool encrypt_local;
     char hex_key[Sizes::hex_key];
+    char remote_host[Sizes::remote_host];
 
     // lazy singleton
     static Prefs& getInstance(void) {
@@ -111,12 +112,16 @@ class Prefs {
 
 static Prefs& prefs = Prefs::getInstance();
 
-void get_pref_bool(const char* key, bool& val, bool verbose = true);
+void get_pref_bool(const char* key, bool& val, bool verbose = true,
+                   bool use_default = false, bool dval = false);
 void get_pref_u16(const char* key, uint16_t& val, uint16_t bad,
-                  bool verbose = true);
+                  bool verbose = true, bool use_default = false,
+                  uint16_t dval = 0);
 void get_pref_u32(const char* key, uint32_t& val, uint32_t bad,
-                  bool verbose = true);
+                  bool verbose = true, bool use_default = false,
+                  uint32_t dval = 0);
 void get_pref_str(const char* key, char* buf, size_t buf_len, const char* bad,
-                  bool verbose = true);
+                  bool verbose = true, bool use_default = false,
+                  const char* dval = "");
 
 #endif  // ARDUINO

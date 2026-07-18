@@ -1,17 +1,7 @@
 #ifdef ARDUINO
 
-#include "e32c_log.hpp"
-#include "utils.hpp"
-
-#ifdef ARDUINO_ARCH_ESP32
-
-#include <Preferences.h>
-
-Preferences preferences;
-
-#else
-#error "Only ESP32 Supported"
-#endif  // ARDUINO_ARCH_ESP32
+#include "log/e32c_log.hpp"
+#include "utils/utils.hpp"
 
 #include "prefs.hpp"
 
@@ -158,55 +148,84 @@ void Prefs::close(void) {
 #endif  // ARDUINO_ARCH_ESP32
 }
 
-void get_pref_bool(const char* key, bool& val, bool verbose) {
+void get_pref_bool(const char* key, bool& val, bool verbose, bool use_default,
+                   bool dval) {
     Log::Err err = prefs.get_bool(key, val);
     if (err != Log::Err::NoError) {
         LOG_E(Log::Uni::Pref, err, key);
-        die();
+        if (use_default) {
+            val = dval;
+        } else {
+            die();
+        }
     }
     if (verbose) {
-        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, b2s(val));
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key,
+              b2s(val));
     } else {
-        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, Log::Word::XXX);
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key,
+              Log::Word::XXX);
     }
 }
 
-void get_pref_u16(const char* key, uint16_t& val, uint16_t bad, bool verbose) {
+void get_pref_u16(const char* key, uint16_t& val, uint16_t bad, bool verbose,
+                  bool use_default, uint16_t dval) {
     Log::Err err = prefs.get_u16(key, val, bad);
     if (err != Log::Err::NoError) {
         LOG_E(Log::Uni::Pref, err, key);
-        die();
+        if (use_default) {
+            val = dval;
+        } else {
+            die();
+        }
     }
     if (verbose) {
         LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadU, key, val);
     } else {
-        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, Log::Word::XXX);
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key,
+              Log::Word::XXX);
     }
 }
 
-void get_pref_u32(const char* key, uint32_t& val, uint32_t bad, bool verbose) {
+void get_pref_u32(const char* key, uint32_t& val, uint32_t bad, bool verbose,
+                  bool use_default, uint32_t dval) {
     Log::Err err = prefs.get_u32(key, val, bad);
     if (err != Log::Err::NoError) {
         LOG_E(Log::Uni::Pref, err, key);
-        die();
+        if (use_default) {
+            val = dval;
+        } else {
+            die();
+        }
     }
     if (verbose) {
         LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadU, key, val);
     } else {
-        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, Log::Word::XXX);
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key,
+              Log::Word::XXX);
     }
 }
 
-void get_pref_str(const char* key, char* buf, size_t buf_len, const char* bad, bool verbose) {
+void get_pref_str(const char* key, char* buf, size_t buf_len, const char* bad,
+                  bool verbose, bool use_default, const char* dval) {
     Log::Err err = prefs.get_chars(key, buf, buf_len, bad);
     if (err != Log::Err::NoError) {
         LOG_E(Log::Uni::Pref, err, key);
-        die();
+        if (use_default) {
+            size_t len = strlcpy(buf, dval, buf_len);
+            if (len >= buf_len) {
+                LOG_E(Log::Uni::Pref, Log::Err::StringTooBig, key);
+                die();
+            }
+        } else {
+            die();
+        }
     }
     if (verbose) {
         LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, buf);
     } else {
-        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key, Log::Word::XXX);
+        LOG_N(Log::Uni::Pref, Log::Sev::Inf, Log::Note::PrefReadS, key,
+              Log::Word::XXX);
     }
 }
 
